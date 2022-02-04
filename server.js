@@ -1,5 +1,5 @@
-import express from "express";
-import config from "./config/index.js";
+const express = require("express");
+const config = require("./config");
 
 //////////////////////////////////
 // initialize

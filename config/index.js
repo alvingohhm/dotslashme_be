@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+const dotenv = require("dotenv");
 const env = process.env.NODE_ENV || "development";
 
 //set different dotenv path base on which node environment
@@ -15,4 +15,4 @@ const baseConfig = {
   // },
 };
 
-export default baseConfig;
+module.exports = baseConfig;

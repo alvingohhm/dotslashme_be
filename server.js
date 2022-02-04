@@ -1,12 +1,17 @@
 const express = require("express");
+const cors = require("cors");
 const config = require("./config");
 const db = require("./db/dbConnect");
 //////////////////////////////////
 // initialize
 //////////////////////////////////
 const app = express();
+////////////////////////////////////
+// Middleware
+////////////////////////////////////
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 //////////////////////////////////
 // listening
 //////////////////////////////////

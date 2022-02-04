@@ -9,6 +9,13 @@ if (env === "development") {
 const baseConfig = {
   env,
   port: process.env.PORT,
+  db: {
+    database: process.env.DB,
+    username: process.env.DB_USERNAME,
+    password: process.env.DB_PWD,
+    host: "127.0.0.1",
+    dialect: "postgres",
+  },
   // secrets: {
   //   jwt: process.env.JWT_SECRET,
   //   jwtExp: "100d",

@@ -10,6 +10,15 @@ module.exports = (db, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      User.hasOne(models.Profile, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
+      models.Profile.belongsTo(User);
     }
   }
   User.init(
@@ -21,9 +30,12 @@ module.exports = (db, DataTypes) => {
         defaultValue: DataTypes.UUIDV4,
       },
       email: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(80),
         allowNull: false,
         unique: true,
+        validate: {
+          isEmail: { msg: "email address format not valid" },
+        },
       },
       firstName: {
         type: DataTypes.STRING(50),

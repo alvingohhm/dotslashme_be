@@ -37,6 +37,17 @@ module.exports = (db, DataTypes) => {
           allowNull: false,
         },
       });
+
+      //many to many between resume and experience through ResumeExperiences
+      Resume.belongsToMany(models.Experience, {
+        through: models.ResumeExperiences,
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "experience_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
     }
   }
   Resume.init(

@@ -12,6 +12,17 @@ module.exports = (db, DataTypes) => {
 
       //1 to many between user and skill
       Skill.belongsTo(models.User);
+
+      //many to many between resume and skill through ResumeSkills
+      Skill.belongsToMany(models.Resume, {
+        through: models.ResumeSkills,
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "skill_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
     }
   }
   Skill.init(

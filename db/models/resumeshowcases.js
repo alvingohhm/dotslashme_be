@@ -31,24 +31,8 @@ module.exports = (db, DataTypes) => {
   }
   ResumeShowcases.init(
     {
-      resume_id: {
-        type: DataTypes.UUID,
-        onDelete: "CASCADE",
-        references: {
-          model: Resume,
-          key: "id",
-        },
-        allowNull: false,
-      },
-      showcase_id: {
-        type: DataTypes.UUID,
-        onDelete: "CASCADE",
-        references: {
-          model: Showcase,
-          key: "id",
-        },
-        allowNull: false,
-      },
+      resume_id: DataTypes.UUID,
+      showcase_id: DataTypes.UUID,
     },
     {
       sequelize: db,

@@ -1,7 +1,7 @@
 const { Model } = require("sequelize");
 
 module.exports = (db, DataTypes) => {
-  class Showcase extends Model {
+  class Resume extends Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -10,21 +10,25 @@ module.exports = (db, DataTypes) => {
     static associate(models) {
       // define association here
 
-      //1 to many between user and showcase
-      Showcase.belongsTo(models.User);
+      //1 to many between user and resume
+      Resume.belongsTo(models.User);
 
-      Showcase.belongsToMany(models.Resume, {
+      //1 to many between summary and resuem
+      Resume.belongsTo(models.Summary);
+
+      //many to many between resume and showcase through ResumeShowcases
+      Resume.belongsToMany(models.Showcase, {
         through: models.ResumeShowcases,
         onDelete: "CASCADE",
         foreignKey: {
-          name: "showcase_id",
+          name: "resume_id",
           type: DataTypes.UUID,
           allowNull: false,
         },
       });
     }
   }
-  Showcase.init(
+  Resume.init(
     {
       id: {
         type: DataTypes.UUID,
@@ -37,28 +41,36 @@ module.exports = (db, DataTypes) => {
         allowNull: false,
         set(value) {
           if (!value || value.length === 0) {
-            this.setDataValue("identifier", `Showcase_${this.id}`);
+            this.setDataValue("identifier", `Summary_${this.id}`);
           }
         },
       },
-      url: {
-        type: DataTypes.TEXT,
-        allowNull: false,
+      has_phone: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
-      description: {
-        type: DataTypes.TEXT,
-        allowNull: false,
+      has_address: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
+      has_socialmedia: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
       tags: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        allowNull: true,
+      },
+      job_tags: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
       },
     },
     {
       sequelize: db,
-      modelName: "Showcase",
+      modelName: "Resume",
       timestamps: true,
     }
   );
-  return Showcase;
+  return Resume;
 };

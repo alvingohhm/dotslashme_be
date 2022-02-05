@@ -5,6 +5,14 @@ const db = require("../dbConnect");
 const models = {
   User: require("./user")(db, DataTypes),
   Profile: require("./profile")(db, DataTypes),
+  Summary: require("./summary")(db, DataTypes),
+  Experience: require("./experience")(db, DataTypes),
+  Education: require("./education")(db, DataTypes),
+  Showcase: require("./showcase")(db, DataTypes),
+  Summary: require("./summary")(db, DataTypes),
+  Skill: require("./skill")(db, DataTypes),
+  ResumeShowcases: require("./resumeshowcases")(db, DataTypes),
+  Resume: require("./resume")(db, DataTypes),
 };
 
 Object.keys(models).forEach((modelName) => {

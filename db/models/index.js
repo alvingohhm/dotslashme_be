@@ -9,9 +9,11 @@ const models = {
   Experience: require("./experience")(db, DataTypes),
   Education: require("./education")(db, DataTypes),
   Showcase: require("./showcase")(db, DataTypes),
-  Summary: require("./summary")(db, DataTypes),
   Skill: require("./skill")(db, DataTypes),
   ResumeShowcases: require("./resumeshowcases")(db, DataTypes),
+  ResumeSkills: require("./resumeskills")(db, DataTypes),
+  ResumeExperiences: require("./resumeexperiences")(db, DataTypes),
+  ResumeEducation: require("./resumeeducation")(db, DataTypes),
   Resume: require("./resume")(db, DataTypes),
 };
 

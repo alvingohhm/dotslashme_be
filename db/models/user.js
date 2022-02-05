@@ -31,6 +31,17 @@ module.exports = (db, DataTypes) => {
         },
       });
       models.Education.belongsTo(User);
+
+      //1 to many between user and experience
+      User.hasMany(models.Experience, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
+      models.Experience.belongsTo(User);
     }
   }
   User.init(

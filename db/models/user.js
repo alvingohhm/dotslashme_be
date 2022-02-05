@@ -10,6 +10,7 @@ module.exports = (db, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      //1 to 1 between user and profile
       User.hasOne(models.Profile, {
         onDelete: "CASCADE",
         foreignKey: {
@@ -19,6 +20,17 @@ module.exports = (db, DataTypes) => {
         },
       });
       models.Profile.belongsTo(User);
+
+      //1 to many between user and education
+      User.hasMany(models.Education, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
+      models.Education.belongsTo(User);
     }
   }
   User.init(

@@ -13,6 +13,7 @@ module.exports = (db, DataTypes) => {
       //1 to many between user and showcase
       Showcase.belongsTo(models.User);
 
+      //many to many between resume and showcase through ResumeShowcases
       Showcase.belongsToMany(models.Resume, {
         through: models.ResumeShowcases,
         onDelete: "CASCADE",

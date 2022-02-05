@@ -53,6 +53,17 @@ module.exports = (db, DataTypes) => {
         },
       });
       models.Showcase.belongsTo(User);
+
+      //1 to many between user and skill
+      User.hasMany(models.Skill, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
+      models.Skill.belongsTo(User);
     }
   }
   User.init(

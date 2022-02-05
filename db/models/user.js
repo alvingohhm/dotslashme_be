@@ -19,7 +19,6 @@ module.exports = (db, DataTypes) => {
           allowNull: false,
         },
       });
-      models.Profile.belongsTo(User);
 
       //1 to many between user and education
       User.hasMany(models.Education, {
@@ -30,7 +29,6 @@ module.exports = (db, DataTypes) => {
           allowNull: false,
         },
       });
-      models.Education.belongsTo(User);
 
       //1 to many between user and experience
       User.hasMany(models.Experience, {
@@ -41,7 +39,6 @@ module.exports = (db, DataTypes) => {
           allowNull: false,
         },
       });
-      models.Experience.belongsTo(User);
 
       //1 to many between user and showcase
       User.hasMany(models.Showcase, {
@@ -52,7 +49,6 @@ module.exports = (db, DataTypes) => {
           allowNull: false,
         },
       });
-      models.Showcase.belongsTo(User);
 
       //1 to many between user and skill
       User.hasMany(models.Skill, {
@@ -63,7 +59,6 @@ module.exports = (db, DataTypes) => {
           allowNull: false,
         },
       });
-      models.Skill.belongsTo(User);
 
       //1 to many between user and summary
       User.hasMany(models.Summary, {
@@ -74,7 +69,16 @@ module.exports = (db, DataTypes) => {
           allowNull: false,
         },
       });
-      models.Summary.belongsTo(User);
+
+      //1 to many between user and resume
+      User.hasMany(models.Resume, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
     }
   }
   User.init(

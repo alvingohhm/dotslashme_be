@@ -9,6 +9,9 @@ module.exports = (db, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
+      //1 to 1 between user and profile
+      Profile.belongsTo(models.User);
     }
   }
   Profile.init(

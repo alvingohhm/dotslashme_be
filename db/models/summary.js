@@ -9,6 +9,19 @@ module.exports = (db, DataTypes) => {
      */
     static associate(models) {
       // define association here
+
+      //1 to many between user and summary
+      Summary.belongsTo(models.User);
+
+      //1 to many between summary and resuem
+      Summary.hasMany(models.Resume, {
+        onDelete: "SET NULL",
+        foreignKey: {
+          name: "summary_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
     }
   }
   Summary.init(

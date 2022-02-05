@@ -35,7 +35,7 @@ module.exports = {
         allowNull: false,
       },
       location: {
-        type: Sequelize.STRING,
+        type: Sequelize.STRING(80),
         allowNull: false,
       },
       degree: {

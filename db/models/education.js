@@ -31,17 +31,19 @@ module.exports = (db, DataTypes) => {
       start_date: {
         type: DataTypes.DATEONLY,
         defaultValue: DataTypes.NOW,
+        allowNull: false,
       },
       end_date: {
         type: DataTypes.DATEONLY,
         defaultValue: DataTypes.NOW,
+        allowNull: false,
       },
       school: {
         type: DataTypes.STRING,
         allowNull: false,
       },
       location: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(80),
         allowNull: false,
       },
       degree: {

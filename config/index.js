@@ -16,10 +16,12 @@ const baseConfig = {
     host: "127.0.0.1",
     dialect: "postgres",
   },
-  // secrets: {
-  //   jwt: process.env.JWT_SECRET,
-  //   jwtExp: "100d",
-  // },
+  secrets: {
+    jwt: process.env.JWT_SECRET,
+    refresh: process.env.REFRESH_TOKEN_SECRET,
+    jwtExp: "15m",
+    refreshExp: "100d",
+  },
 };
 
 module.exports = baseConfig;

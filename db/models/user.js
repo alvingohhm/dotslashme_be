@@ -97,7 +97,7 @@ module.exports = (db, DataTypes) => {
           isEmail: { msg: "email address format not valid" },
         },
       },
-      firstName: {
+      first_name: {
         type: DataTypes.STRING(50),
         allowNull: false,
       },

@@ -1,5 +1,5 @@
 const { Model } = require("sequelize");
-const useBcrypt = require("sequelize-bcrypt");
+const bcrypt = require("bcrypt");
 
 module.exports = (db, DataTypes) => {
   class User extends Model {
@@ -80,6 +80,14 @@ module.exports = (db, DataTypes) => {
         },
       });
     }
+
+    static async hashValue(payload) {
+      return await bcrypt.hash(payload, 12);
+    }
+
+    async authenticate(pwd) {
+      return await bcrypt.compare(pwd, this.password);
+    }
   }
   User.init(
     {
@@ -124,10 +132,23 @@ module.exports = (db, DataTypes) => {
       timestamps: true,
     }
   );
-  useBcrypt(User, {
-    field: "password", // secret field to hash, default: 'password'
-    rounds: 12, // used to generate bcrypt salt, default: 12
-    compare: "authenticate", // method used to compare secrets, default: 'authenticate'
+
+  User.beforeCreate(async (user) => {
+    if (user.password) {
+      const hashedPassword = await User.hashValue(user.password);
+      user.password = hashedPassword;
+    }
+    if (user.email) {
+      user.email = user.email.toLowerCase();
+    }
   });
+
+  User.beforeUpdate(async (user) => {
+    if (user.changed("password")) {
+      const hashedPassword = await bcrypt.hash(user.password, 12);
+      user.password = hashedPassword;
+    }
+  });
+
   return User;
 };

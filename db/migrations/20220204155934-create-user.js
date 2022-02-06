@@ -9,6 +9,7 @@ module.exports = {
       email: {
         type: Sequelize.STRING(80),
         allowNull: false,
+        unique: true,
       },
       first_name: {
         type: Sequelize.STRING(50),

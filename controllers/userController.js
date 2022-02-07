@@ -12,11 +12,9 @@ const userController = {
           .status(401)
           .json(jsonMessages(401, "no", "User not found", []));
       }
-      console.log("before getProfile");
+
       let profile = await user.getProfile();
       if (!profile) {
-        console.log("in getProfile");
-
         profile = await user.createProfile(req.body);
         const data = [profile.toJSON()];
         return res
@@ -44,6 +42,49 @@ const userController = {
       return res
         .status(500)
         .json(jsonMessages(500, "no", "Unable to create profile", []));
+    }
+  },
+
+  getProfile: async (req, res) => {
+    const { id } = req.session.user || {};
+
+    try {
+      const user = await User.findByPk(id, {
+        attributes: {
+          exclude: [
+            "password",
+            "activation_token",
+            "is_activated",
+            "createdAt",
+            "updatedAt",
+          ],
+        },
+        include: [
+          {
+            model: Profile,
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "user_id"],
+            },
+          },
+        ],
+      });
+
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      const data = [user.toJSON()];
+
+      return res
+        .status(201)
+        .json(jsonMessages(200, "yes", "Get profile successfully", data));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to get profile", []));
     }
   },
 };

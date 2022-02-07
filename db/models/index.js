@@ -1,6 +1,6 @@
 const { DataTypes } = require("sequelize");
 const Sequelize = require("sequelize");
-const db = require("../dbConnect");
+const { db } = require("../dbConnect");
 
 const models = {
   User: require("./user")(db, DataTypes),

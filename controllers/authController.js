@@ -7,16 +7,21 @@ const authController = {
   genJwtToken: (id, type) => {
     if (type === "access") {
       exp = { expiresIn: config.secrets.jwtExp };
+      secret = config.secrets.jwt;
     } else if (type === "refresh") {
       exp = { expiresIn: config.secrets.refreshExp };
+      secret = config.secrets.refresh;
     }
 
-    return jwt.sign({ id }, config.secrets.jwt, exp);
+    return jwt.sign({ id }, secret, exp);
   },
 
-  verifyToken: (token) =>
+  verifyToken: (token, type) =>
     new Promise((resolve, reject) => {
-      jwt.verify(token, config.secrets.jwt, (err, decoded) => {
+      const secret =
+        type === "access" ? config.secrets.jwt : config.secrets.refresh;
+
+      jwt.verify(token, secret, (err, decoded) => {
         if (err) return reject(err);
         resolve(decoded);
       });
@@ -45,12 +50,17 @@ const authController = {
         const accessToken = authController.genJwtToken(user.id, "access");
         const refreshToken = authController.genJwtToken(user.id, "refresh");
 
+        req.session.user = {
+          id: user.id,
+          accessToken,
+          refreshToken,
+        };
+
         return res.status(201).json(
-          jsonMessages(201, "yes", "", [
+          jsonMessages(201, "yes", "Account signup successfully", [
             {
               id: user.id,
               accessToken,
-              refreshToken,
             },
           ])
         );
@@ -59,7 +69,7 @@ const authController = {
       const [ValidationErrorItem = {}] = err.errors || [];
       const { message = "" } = ValidationErrorItem;
       const msg =
-        message === "email must be unique"
+        message === "Email must be unique"
           ? "Failed to register, invalid data!"
           : message;
 
@@ -77,7 +87,7 @@ const authController = {
           jsonMessages(
             400,
             "no",
-            "email and password fields must not be empty",
+            "Email and password fields must not be empty",
             []
           )
         );
@@ -85,16 +95,22 @@ const authController = {
 
     try {
       const user = await User.findOne({ where: { email } });
+
       if (user && (await user.authenticate(password))) {
         const accessToken = authController.genJwtToken(user.id, "access");
         const refreshToken = authController.genJwtToken(user.id, "refresh");
 
+        req.session.user = {
+          id: user.id,
+          accessToken,
+          refreshToken,
+        };
+
         return res.status(201).json(
-          jsonMessages(201, "yes", "", [
+          jsonMessages(201, "yes", "Login successfully", [
             {
               id: user.id,
               accessToken,
-              refreshToken,
             },
           ])
         );
@@ -108,13 +124,66 @@ const authController = {
       res
         .status(500)
         .json(
-          jsonMessages(500, "no", "unable to log in due to internal error", [])
+          jsonMessages(500, "no", "Unable to log in due to internal error", [])
         );
     }
   },
 
+  refreshToken_handler: async (req, res) => {
+    const { refreshToken } = req.session.user;
+
+    try {
+      const decoded = await authController.verifyToken(refreshToken, "refresh");
+      const user = await User.findByPk(decoded.id, {
+        attributes: ["id", "email"],
+      });
+
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      const newAccessToken = authController.genJwtToken(user.id, "access");
+      const newRefreshToken = authController.genJwtToken(user.id, "refresh");
+
+      req.session.user.accessToken = newAccessToken;
+      req.session.user.refreshToken = newRefreshToken;
+
+      return res.status(201).json(
+        jsonMessages(201, "yes", "", [
+          {
+            id: user.id,
+            accessToken: newAccessToken,
+          },
+        ])
+      );
+    } catch (err) {
+      console.log(err);
+      res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to generate token", []));
+    }
+  },
+
+  logout_handler: (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.log(err);
+        res
+          .status(500)
+          .json(jsonMessages(500, "no", "Logout operation error", []));
+      } else {
+        res
+          .status(200)
+          .json(jsonMessages(200, "yes", "Logout successfully", []));
+      }
+    });
+  },
+
   protect: async (req, res, next) => {
     const { authorization = "" } = req.headers;
+    const { accessToken } = req.session.user || {};
 
     if (!authorization.startsWith("Bearer")) {
       return res
@@ -124,8 +193,14 @@ const authController = {
 
     token = authorization.split(" ")[1].trim();
 
+    if (token !== accessToken) {
+      return res
+        .status(401)
+        .json(jsonMessages(401, "no", "AccessToken not valid", []));
+    }
+
     try {
-      const decoded = await authController.verifyToken(token);
+      const decoded = await authController.verifyToken(token, "access");
       const user = await User.findByPk(decoded.id, {
         attributes: ["id", "email"],
       });
@@ -133,12 +208,13 @@ const authController = {
       if (!user) {
         return res
           .status(401)
-          .json(jsonMessages(401, "no", "user not found", []));
+          .json(jsonMessages(401, "no", "User not found", []));
       }
 
       req.user = user;
       next();
     } catch (err) {
+      console.log(err);
       return res.status(401).json(jsonMessages(401, "no", err.message, []));
     }
   },

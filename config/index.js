@@ -15,11 +15,13 @@ const baseConfig = {
     password: process.env.DB_PWD,
     host: "127.0.0.1",
     dialect: "postgres",
+    port: 5432,
   },
   secrets: {
+    sessions: process.env.JWT_SECRET,
     jwt: process.env.JWT_SECRET,
     refresh: process.env.REFRESH_TOKEN_SECRET,
-    jwtExp: "15m",
+    jwtExp: "30s",
     refreshExp: "100d",
   },
 };

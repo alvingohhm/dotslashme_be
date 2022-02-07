@@ -7,6 +7,8 @@
     "mig:up": "npx sequelize-cli db:migrate",
     "mig:down": "npx sequelize-cli db:migrate:undo",
     "mig:undoall": "npx sequelize-cli db:migrate:undo:all",
+    "seed:all": "npx sequelize-cli db:seed:all",
+    "seed:undoall": "npx sequelize-cli db:seed:undo:all",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server"
@@ -26,6 +28,7 @@
     "sequelize": "^6.15.0"
   },
   "devDependencies": {
+    "@faker-js/faker": "^6.0.0-alpha.5",
     "dotenv": "^15.0.0",
     "nodemon": "^2.0.15",
     "sequelize-cli": "^6.4.1",

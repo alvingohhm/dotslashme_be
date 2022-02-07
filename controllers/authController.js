@@ -121,7 +121,7 @@ const authController = {
       }
     } catch (err) {
       console.log(err);
-      res
+      return res
         .status(500)
         .json(
           jsonMessages(500, "no", "Unable to log in due to internal error", [])
@@ -130,7 +130,7 @@ const authController = {
   },
 
   refreshToken_handler: async (req, res) => {
-    const { refreshToken } = req.session.user;
+    const { refreshToken } = req.session.user || {};
 
     try {
       const decoded = await authController.verifyToken(refreshToken, "refresh");
@@ -160,7 +160,7 @@ const authController = {
       );
     } catch (err) {
       console.log(err);
-      res
+      return res
         .status(500)
         .json(jsonMessages(500, "no", "Unable to generate token", []));
     }
@@ -170,11 +170,11 @@ const authController = {
     req.session.destroy((err) => {
       if (err) {
         console.log(err);
-        res
+        return res
           .status(500)
           .json(jsonMessages(500, "no", "Logout operation error", []));
       } else {
-        res
+        return res
           .status(200)
           .json(jsonMessages(200, "yes", "Logout successfully", []));
       }

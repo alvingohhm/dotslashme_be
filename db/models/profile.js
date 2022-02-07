@@ -11,7 +11,14 @@ module.exports = (db, DataTypes) => {
       // define association here
 
       //1 to 1 between user and profile
-      Profile.belongsTo(models.User);
+      Profile.belongsTo(models.User, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
     }
   }
   Profile.init(

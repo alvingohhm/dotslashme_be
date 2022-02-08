@@ -4,7 +4,6 @@ const config = require("./config");
 const { db, pool } = require("./db/dbConnect");
 const expressSession = require("express-session");
 const pgSession = require("connect-pg-simple")(expressSession);
-const { User } = require("./db/models");
 const { userRouter } = require("./routers");
 const { authController } = require("./controllers");
 
@@ -18,7 +17,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
-
+//middleware for session
 app.use(
   expressSession({
     store: new pgSession({
@@ -32,21 +31,18 @@ app.use(
     // Insert express-session options here
   })
 );
-//////////////////////////////////
-// Login and Signup
-//////////////////////////////////
-app.get("/", (req, res) => {
-  res.status(400).json();
-});
-
+//////////////////////////////////////////////////
+// Login, Signup, Logout and Refresh Jwt Token
+//////////////////////////////////////////////////
 app.post("/signup", authController.signup_handler);
 app.post("/login", authController.login_handler);
 app.delete("/logout", authController.logout_handler);
 app.post("/refresh", authController.refreshToken_handler);
-app.post("/test", authController.protect, (req, res) => {
-  res.send("pass test");
-});
 
+//////////////////////////////////////////////////
+// Resource Routes
+//////////////////////////////////////////////////
+app.use("/api", authController.protect);
 app.use("/api/users", userRouter);
 
 //////////////////////////////////

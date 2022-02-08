@@ -21,7 +21,7 @@ const baseConfig = {
     sessions: process.env.JWT_SECRET,
     jwt: process.env.JWT_SECRET,
     refresh: process.env.REFRESH_TOKEN_SECRET,
-    jwtExp: "30s",
+    jwtExp: "30d",
     refreshExp: "100d",
   },
 };

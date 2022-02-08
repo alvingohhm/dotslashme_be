@@ -30,5 +30,6 @@ router.post("/experience", userController.createExperience);
 router.get("/experiences", userController.getExperiences);
 router.get("/experience/:id", userController.getOneExperience);
 router.put("/experience/:id", userController.updateExperience);
+router.delete("/experience/:id", userController.removeExperience);
 
 module.exports = router;

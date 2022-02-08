@@ -846,15 +846,32 @@ const userController = {
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
+      //create default resume instance
+      const resumes = await user.getResumes({ where: { is_main: true } });
+      const resume = resumes[0];
+
       req.body.identifier = "Default Experience";
       req.body.is_main = true;
       req.body.tags = ["default"];
 
-      console.log(req.body);
-
       const newExperience = await user.createExperience(req.body);
+
       const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
         newExperience.toJSON();
+
+      await resume.addExperience(newExperience).catch((err) => {
+        console.log(err);
+        return res
+          .status(400)
+          .json(
+            jsonMessages(
+              400,
+              "no",
+              "unable to associate resume with experience"
+            ),
+            []
+          );
+      });
 
       return res
         .status(201)
@@ -994,6 +1011,53 @@ const userController = {
         .status(500)
         .json(
           jsonMessages(500, "no", "Unable to update experience details", [])
+        );
+    }
+  },
+
+  removeExperience: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const experience = await Experience.findByPk(id, {
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+      });
+
+      if (!experience) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "Experience details not found", []));
+      }
+
+      experience
+        .destroy()
+        .then(() => {
+          return res
+            .status(200)
+            .json(
+              jsonMessages(
+                200,
+                "yes",
+                "Experience details remove successfully",
+                []
+              )
+            );
+        })
+        .catch((err) => {
+          console.log(err);
+          return res
+            .status(400)
+            .json(
+              jsonMessages(400, "no", "Unable to remove Experience details", [])
+            );
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(500, "no", "Unable to remove experience details", [])
         );
     }
   },

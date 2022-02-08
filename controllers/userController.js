@@ -209,35 +209,27 @@ const userController = {
 
   getSummary: async (req, res) => {
     try {
-      const { id } = req.session.user || {};
-      const user = await User.findByPk(id, {
-        attributes: {
-          exclude: [
-            "password",
-            "activation_token",
-            "is_activated",
-            "createdAt",
-            "updatedAt",
-          ],
-        },
-        include: [
-          {
-            model: Summary,
-            where: { is_main: true },
-            attributes: {
-              exclude: ["createdAt", "updatedAt", "user_id"],
-            },
-          },
-        ],
-      });
-
+      const user = await userController.getSessionUser(req);
       if (!user) {
         return res
           .status(401)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
-      const data = [user.toJSON()];
+      let summaries = await user.getSummaries({
+        where: { is_main: true },
+        attributes: {
+          exclude: ["createdAt", "updatedAt", "user_id", "is_main"],
+        },
+        raw: true,
+      });
+
+      let data;
+      if (summaries.length === 1) {
+        data = summaries;
+      } else {
+        data = [summaries[0]];
+      }
 
       return res
         .status(200)

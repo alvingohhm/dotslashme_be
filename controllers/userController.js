@@ -1,4 +1,11 @@
-const { User, Profile, Summary, Skill, Showcase } = require("../db/models");
+const {
+  User,
+  Profile,
+  Summary,
+  Skill,
+  Showcase,
+  Education,
+} = require("../db/models");
 const jsonMessages = require("../utils/jsonMessages");
 
 const userController = {
@@ -497,6 +504,166 @@ const userController = {
       return res
         .status(500)
         .json(jsonMessages(500, "no", "Unable to update showcase", []));
+    }
+  },
+
+  createEducation: async (req, res) => {
+    try {
+      const user = await userController.getSessionUser(req);
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      req.body.identifier = "Default Education";
+      req.body.is_main = true;
+      req.body.tags = ["default"];
+
+      console.log(req.body);
+
+      const newEducation = await user.createEducation(req.body);
+      const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
+        newEducation.toJSON();
+
+      return res
+        .status(201)
+        .json(
+          jsonMessages(201, "yes", "Education details created", [finalResult])
+        );
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(500, "no", "Unable to create education details", [])
+        );
+    }
+  },
+
+  getEducation: async (req, res) => {
+    try {
+      const user = await userController.getSessionUser(req);
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      let education = await user.getEducation({
+        where: { is_main: true },
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+        raw: true,
+      });
+
+      const data = [education];
+      return res
+        .status(200)
+        .json(
+          jsonMessages(
+            200,
+            "yes",
+            "Get series of education details successfully",
+            data
+          )
+        );
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(
+            500,
+            "no",
+            "Unable to get series of education details",
+            []
+          )
+        );
+    }
+  },
+
+  getOneEducation: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const education = await Education.findByPk(id, {
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+      });
+
+      if (!education) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "Education details not found", []));
+      }
+
+      const data = [education.toJSON()];
+      return res
+        .status(200)
+        .json(
+          jsonMessages(200, "yes", "Get education details successfully", data)
+        );
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to get education details", []));
+    }
+  },
+
+  updateEducation: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const education = await Education.findByPk(id, {
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+      });
+
+      if (!education) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "Education details not found", []));
+      }
+
+      education.set(req.body);
+      await education
+        .save()
+        .then((updatedEducation) => {
+          const data = [updatedEducation.toJSON()];
+          return res
+            .status(200)
+            .json(
+              jsonMessages(
+                200,
+                "yes",
+                "Update education details successfully",
+                data
+              )
+            );
+        })
+        .catch((error) => {
+          console.log(error);
+          return res
+            .status(400)
+            .json(
+              jsonMessages(
+                400,
+                "no",
+                "Unable to update education details successfully",
+                []
+              )
+            );
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(500, "no", "Unable to update education details", [])
+        );
     }
   },
 };

@@ -18,4 +18,9 @@ router.get("/showcases", userController.getShowcases);
 router.get("/showcase/:id", userController.getOneShowcase);
 router.put("/showcase/:id", userController.updateShowcase);
 
+router.post("/education", userController.createEducation);
+router.get("/education", userController.getEducation);
+router.get("/education/:id", userController.getOneEducation);
+router.put("/education/:id", userController.updateEducation);
+
 module.exports = router;

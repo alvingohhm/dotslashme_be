@@ -175,7 +175,7 @@ const userController = {
                 jsonMessages(
                   400,
                   "no",
-                  "unable to link associate resume with summary"
+                  "unable to associate resume with summary"
                 ),
                 []
               );
@@ -270,6 +270,11 @@ const userController = {
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
+      //create default resume instance
+
+      const resumes = await user.getResumes({ where: { is_main: true } });
+      const resume = resumes[0];
+
       let skillNames = (
         await user.getSkills({
           where: { is_main: true },
@@ -288,8 +293,18 @@ const userController = {
       req.body.tags = ["default"];
 
       const newSkill = await user.createSkill(req.body);
+
       const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
         newSkill.toJSON();
+
+      await resume.addSkill(newSkill).catch((err) => {
+        return res
+          .status(400)
+          .json(
+            jsonMessages(400, "no", "unable to associate resume with skill"),
+            []
+          );
+      });
 
       return res
         .status(201)

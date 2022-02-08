@@ -11,7 +11,14 @@ module.exports = (db, DataTypes) => {
       // define association here
 
       //1 to many between user and summary
-      Summary.belongsTo(models.User);
+      Summary.belongsTo(models.User, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
 
       //1 to many between summary and resuem
       Summary.hasMany(models.Resume, {
@@ -35,11 +42,6 @@ module.exports = (db, DataTypes) => {
       identifier: {
         type: DataTypes.STRING,
         allowNull: false,
-        set(value) {
-          if (!value || value.length === 0) {
-            this.setDataValue("identifier", `Summary_${this.id}`);
-          }
-        },
       },
       headline: {
         type: DataTypes.STRING,
@@ -52,6 +54,10 @@ module.exports = (db, DataTypes) => {
       tags: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
+      },
+      is_main: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

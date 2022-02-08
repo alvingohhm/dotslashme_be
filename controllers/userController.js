@@ -5,6 +5,7 @@ const {
   Skill,
   Showcase,
   Education,
+  Experience,
 } = require("../db/models");
 const jsonMessages = require("../utils/jsonMessages");
 
@@ -393,8 +394,6 @@ const userController = {
       req.body.is_main = true;
       req.body.tags = ["default"];
 
-      console.log(req.body);
-
       const newShowcase = await user.createShowcase(req.body);
       const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
         newShowcase.toJSON();
@@ -520,8 +519,6 @@ const userController = {
       req.body.is_main = true;
       req.body.tags = ["default"];
 
-      console.log(req.body);
-
       const newEducation = await user.createEducation(req.body);
       const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
         newEducation.toJSON();
@@ -555,6 +552,7 @@ const userController = {
         attributes: {
           exclude: ["tags", "is_main", "createdAt", "updatedAt"],
         },
+        order: [["end_date", "DESC"]],
         raw: true,
       });
 
@@ -663,6 +661,167 @@ const userController = {
         .status(500)
         .json(
           jsonMessages(500, "no", "Unable to update education details", [])
+        );
+    }
+  },
+
+  createExperience: async (req, res) => {
+    try {
+      const user = await userController.getSessionUser(req);
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      req.body.identifier = "Default Experience";
+      req.body.is_main = true;
+      req.body.tags = ["default"];
+
+      console.log(req.body);
+
+      const newExperience = await user.createExperience(req.body);
+      const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
+        newExperience.toJSON();
+
+      return res
+        .status(201)
+        .json(
+          jsonMessages(201, "yes", "Experience details created", [finalResult])
+        );
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(500, "no", "Unable to create Experience details", [])
+        );
+    }
+  },
+
+  getExperiences: async (req, res) => {
+    try {
+      const user = await userController.getSessionUser(req);
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      let experience = await user.getExperiences({
+        where: { is_main: true },
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+        order: [["end_date", "DESC"]],
+        raw: true,
+      });
+
+      const data = [experience];
+      return res
+        .status(200)
+        .json(
+          jsonMessages(
+            200,
+            "yes",
+            "Get series of experience details successfully",
+            data
+          )
+        );
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(
+            500,
+            "no",
+            "Unable to get series of experience details",
+            []
+          )
+        );
+    }
+  },
+
+  getOneExperience: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const experience = await Experience.findByPk(id, {
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+      });
+
+      if (!experience) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "Experience details not found", []));
+      }
+
+      const data = [experience.toJSON()];
+      return res
+        .status(200)
+        .json(
+          jsonMessages(200, "yes", "Get experience details successfully", data)
+        );
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to get experience details", []));
+    }
+  },
+
+  updateExperience: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const experience = await Experience.findByPk(id, {
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+      });
+
+      if (!experience) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "Experience details not found", []));
+      }
+
+      experience.set(req.body);
+      await experience
+        .save()
+        .then((updatedExperience) => {
+          const data = [updatedExperience.toJSON()];
+          return res
+            .status(200)
+            .json(
+              jsonMessages(
+                200,
+                "yes",
+                "Update experience details successfully",
+                data
+              )
+            );
+        })
+        .catch((error) => {
+          console.log(error);
+          return res
+            .status(400)
+            .json(
+              jsonMessages(
+                400,
+                "no",
+                "Unable to update experience details successfully",
+                []
+              )
+            );
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(500, "no", "Unable to update experience details", [])
         );
     }
   },

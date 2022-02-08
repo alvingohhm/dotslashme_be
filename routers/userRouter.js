@@ -23,4 +23,9 @@ router.get("/education", userController.getEducation);
 router.get("/education/:id", userController.getOneEducation);
 router.put("/education/:id", userController.updateEducation);
 
+router.post("/experience", userController.createExperience);
+router.get("/experiences", userController.getExperiences);
+router.get("/experience/:id", userController.getOneExperience);
+router.put("/experience/:id", userController.updateExperience);
+
 module.exports = router;

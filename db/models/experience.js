@@ -43,11 +43,6 @@ module.exports = (db, DataTypes) => {
       identifier: {
         type: DataTypes.STRING,
         allowNull: false,
-        set(value) {
-          if (!value || value.length === 0) {
-            this.setDataValue("identifier", `Experience_${this.id}`);
-          }
-        },
       },
       start_date: {
         type: DataTypes.DATEONLY,

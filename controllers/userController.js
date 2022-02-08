@@ -621,13 +621,32 @@ const userController = {
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
+      //create default resume instance
+      const resumes = await user.getResumes({ where: { is_main: true } });
+      const resume = resumes[0];
+
       req.body.identifier = "Default Education";
       req.body.is_main = true;
       req.body.tags = ["default"];
 
       const newEducation = await user.createEducation(req.body);
+
       const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
         newEducation.toJSON();
+
+      await resume.addEducation(newEducation).catch((err) => {
+        console.log(err);
+        return res
+          .status(400)
+          .json(
+            jsonMessages(
+              400,
+              "no",
+              "unable to associate resume with education"
+            ),
+            []
+          );
+      });
 
       return res
         .status(201)
@@ -767,6 +786,53 @@ const userController = {
         .status(500)
         .json(
           jsonMessages(500, "no", "Unable to update education details", [])
+        );
+    }
+  },
+
+  removeEducation: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const education = await Education.findByPk(id, {
+        attributes: {
+          exclude: ["tags", "is_main", "createdAt", "updatedAt"],
+        },
+      });
+
+      if (!education) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "Education details not found", []));
+      }
+
+      education
+        .destroy()
+        .then(() => {
+          return res
+            .status(200)
+            .json(
+              jsonMessages(
+                200,
+                "yes",
+                "Education details remove successfully",
+                []
+              )
+            );
+        })
+        .catch((err) => {
+          console.log(err);
+          return res
+            .status(400)
+            .json(
+              jsonMessages(400, "no", "Unable to remove education details", [])
+            );
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(
+          jsonMessages(500, "no", "Unable to remove education details", [])
         );
     }
   },

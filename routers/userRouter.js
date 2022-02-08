@@ -24,6 +24,7 @@ router.post("/education", userController.createEducation);
 router.get("/education", userController.getEducation);
 router.get("/education/:id", userController.getOneEducation);
 router.put("/education/:id", userController.updateEducation);
+router.delete("/education/:id", userController.removeEducation);
 
 router.post("/experience", userController.createExperience);
 router.get("/experiences", userController.getExperiences);

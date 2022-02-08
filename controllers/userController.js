@@ -1,4 +1,4 @@
-const { User, Profile, Summary } = require("../db/models");
+const { User, Profile, Summary, Skill } = require("../db/models");
 const jsonMessages = require("../utils/jsonMessages");
 
 const userController = {
@@ -108,7 +108,7 @@ const userController = {
       const data = [user.toJSON()];
 
       return res
-        .status(201)
+        .status(200)
         .json(jsonMessages(200, "yes", "Get profile successfully", data));
     } catch (err) {
       console.log(err);
@@ -227,13 +227,171 @@ const userController = {
       const data = [user.toJSON()];
 
       return res
-        .status(201)
+        .status(200)
         .json(jsonMessages(200, "yes", "Get summary successfully", data));
     } catch (err) {
       console.log(err);
       return res
         .status(500)
         .json(jsonMessages(500, "no", "Unable to get summary", []));
+    }
+  },
+
+  createSkill: async (req, res) => {
+    const { id } = req.session.user || {};
+    try {
+      const user = await User.findByPk(id, {
+        attributes: {
+          exclude: [
+            "password",
+            "activation_token",
+            "is_activated",
+            "createdAt",
+            "updatedAt",
+          ],
+        },
+      });
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      let skillNames = (
+        await user.getSkills({
+          where: { is_main: true },
+          attributes: ["skill_name"],
+          raw: true,
+        })
+      ).map((skill) => skill.skill_name);
+
+      if (skillNames.includes(req.body.skill_name)) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "Skill already exist", []));
+      }
+
+      req.body.is_main = true;
+      req.body.tags = ["default"];
+
+      const newSkill = await user.createSkill(req.body);
+      const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
+        newSkill.toJSON();
+
+      return res
+        .status(201)
+        .json(jsonMessages(201, "yes", "Profile created", [finalResult]));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to create skill", []));
+    }
+  },
+
+  getSkills: async (req, res) => {
+    const { id } = req.session.user || {};
+
+    try {
+      const user = await User.findByPk(id, {
+        attributes: {
+          exclude: [
+            "password",
+            "activation_token",
+            "is_activated",
+            "createdAt",
+            "updatedAt",
+          ],
+        },
+      });
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      let skills = await user.getSkills({
+        where: { is_main: true },
+        attributes: ["id", "skill_name"],
+        raw: true,
+      });
+
+      const data = [skills];
+      return res
+        .status(200)
+        .json(jsonMessages(200, "yes", "Get skills successfully", data));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to get skills", []));
+    }
+  },
+
+  getIndividualSkill: async (req, res) => {
+    const { id } = req.params;
+    // const { id } = req.session.user || {};
+
+    try {
+      const skill = await Skill.findByPk(id, {
+        attributes: ["id", "skill_name"],
+      });
+
+      if (!skill) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "skill not found", []));
+      }
+
+      const data = [skill.toJSON()];
+      return res
+        .status(200)
+        .json(jsonMessages(200, "yes", "Get skill successfully", data));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to get skill", []));
+    }
+  },
+
+  updateSkill: async (req, res) => {
+    const { id } = req.params;
+    // const { id } = req.session.user || {};
+
+    try {
+      const skill = await Skill.findByPk(id, {
+        attributes: ["id", "skill_name"],
+      });
+
+      if (!skill) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "skill not found", []));
+      }
+
+      skill.set(req.body);
+      await skill
+        .save()
+        .then((updatedSkill) => {
+          const data = [updatedSkill.toJSON()];
+          return res
+            .status(200)
+            .json(jsonMessages(200, "yes", "Update skill successfully", data));
+        })
+        .catch((error) => {
+          console.log(error);
+          return res
+            .status(400)
+            .json(
+              jsonMessages(400, "no", "Unable to update skill successfully", [])
+            );
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to update skill", []));
     }
   },
 };

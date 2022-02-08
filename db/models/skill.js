@@ -11,7 +11,14 @@ module.exports = (db, DataTypes) => {
       // define association here
 
       //1 to many between user and skill
-      Skill.belongsTo(models.User);
+      Skill.belongsTo(models.User, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
 
       //many to many between resume and skill through ResumeSkills
       Skill.belongsToMany(models.Resume, {
@@ -40,6 +47,10 @@ module.exports = (db, DataTypes) => {
       tags: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
+      },
+      is_main: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

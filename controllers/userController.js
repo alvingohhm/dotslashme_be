@@ -420,8 +420,7 @@ const userController = {
 
       skill
         .destroy()
-        .then((data) => {
-          console.log(data);
+        .then(() => {
           return res
             .status(200)
             .json(jsonMessages(200, "yes", "Skill remove successfully", []));

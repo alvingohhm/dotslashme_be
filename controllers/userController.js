@@ -1,7 +1,6 @@
 const {
   User,
   Profile,
-  Summary,
   Skill,
   Showcase,
   Education,
@@ -271,7 +270,6 @@ const userController = {
       }
 
       //create default resume instance
-
       const resumes = await user.getResumes({ where: { is_main: true } });
       const resume = resumes[0];
 
@@ -298,6 +296,7 @@ const userController = {
         newSkill.toJSON();
 
       await resume.addSkill(newSkill).catch((err) => {
+        console.log(err);
         return res
           .status(400)
           .json(
@@ -435,7 +434,7 @@ const userController = {
       console.log(err);
       return res
         .status(500)
-        .json(jsonMessages(500, "no", "Unable to update skill", []));
+        .json(jsonMessages(500, "no", "Unable to remove skill", []));
     }
   },
 
@@ -448,13 +447,28 @@ const userController = {
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
+      //create default resume instance
+      const resumes = await user.getResumes({ where: { is_main: true } });
+      const resume = resumes[0];
+
       req.body.identifier = "Default Showcase";
       req.body.is_main = true;
       req.body.tags = ["default"];
 
       const newShowcase = await user.createShowcase(req.body);
+
       const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
         newShowcase.toJSON();
+
+      await resume.addShowcase(newShowcase).catch((err) => {
+        console.log(err);
+        return res
+          .status(400)
+          .json(
+            jsonMessages(400, "no", "unable to associate showcase with skill"),
+            []
+          );
+      });
 
       return res
         .status(201)
@@ -561,6 +575,40 @@ const userController = {
       return res
         .status(500)
         .json(jsonMessages(500, "no", "Unable to update showcase", []));
+    }
+  },
+
+  removeShowcase: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const showcase = await Showcase.findByPk(id, {
+        attributes: ["id", "url", "description"],
+      });
+
+      if (!showcase) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "showcase not found", []));
+      }
+
+      showcase
+        .destroy()
+        .then(() => {
+          return res
+            .status(200)
+            .json(jsonMessages(200, "yes", "Showcase remove successfully", []));
+        })
+        .catch((err) => {
+          console.log(err);
+          return res
+            .status(400)
+            .json(jsonMessages(400, "no", "Unable to remove showcase", []));
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to remove showcase", []));
     }
   },
 

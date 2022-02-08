@@ -18,6 +18,7 @@ router.post("/showcase", userController.createShowcase);
 router.get("/showcases", userController.getShowcases);
 router.get("/showcase/:id", userController.getOneShowcase);
 router.put("/showcase/:id", userController.updateShowcase);
+router.delete("/showcase/:id", userController.removeShowcase);
 
 router.post("/education", userController.createEducation);
 router.get("/education", userController.getEducation);

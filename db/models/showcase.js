@@ -11,7 +11,14 @@ module.exports = (db, DataTypes) => {
       // define association here
 
       //1 to many between user and showcase
-      Showcase.belongsTo(models.User);
+      Showcase.belongsTo(models.User, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
 
       //many to many between resume and showcase through ResumeShowcases
       Showcase.belongsToMany(models.Resume, {
@@ -36,11 +43,6 @@ module.exports = (db, DataTypes) => {
       identifier: {
         type: DataTypes.STRING,
         allowNull: false,
-        set(value) {
-          if (!value || value.length === 0) {
-            this.setDataValue("identifier", `Showcase_${this.id}`);
-          }
-        },
       },
       url: {
         type: DataTypes.TEXT,
@@ -53,6 +55,10 @@ module.exports = (db, DataTypes) => {
       tags: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
+      },
+      is_main: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

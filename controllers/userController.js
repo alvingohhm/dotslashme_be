@@ -1,23 +1,39 @@
-const { User, Profile, Summary, Skill } = require("../db/models");
+const { User, Profile, Summary, Skill, Showcase } = require("../db/models");
 const jsonMessages = require("../utils/jsonMessages");
 
 const userController = {
-  updateProfile: async (req, res) => {
+  getSessionUser: async (req) => {
     const { id } = req.session.user || {};
+    const user = await User.findByPk(id, {
+      attributes: {
+        exclude: [
+          "password",
+          "activation_token",
+          "is_activated",
+          "createdAt",
+          "updatedAt",
+        ],
+      },
+    });
 
+    return user;
+  },
+
+  updateProfile: async (req, res) => {
     try {
-      const user = await User.findByPk(id);
+      const user = await userController.getSessionUser(req);
       if (!user) {
         return res
           .status(401)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
-      //update user
+      //update user first than proceed to profile
       user.set({
         first_name: req.body.first_name,
         last_name: req.body.last_name,
       });
+
       await user.save().catch((error) => {
         console.log(error);
         return res
@@ -29,12 +45,14 @@ const userController = {
       let profile = await user.getProfile();
 
       if (!profile) {
+        //if no profile exist create it instead of update
         profile = await user.createProfile(req.body.Profile);
 
         const finalResult = {
           first_name: user.first_name,
           last_name: user.last_name,
         };
+
         const { id, createdAt, updatedAt, user_id, ...updatedProfile } =
           profile.toJSON();
         finalResult.Profile = updatedProfile;
@@ -43,7 +61,7 @@ const userController = {
           .status(201)
           .json(jsonMessages(201, "yes", "Profile created", [finalResult]));
       } else {
-        //update instead
+        //i fprofile exist update instead
         profile.set(req.body.Profile);
         await profile
           .save()
@@ -76,9 +94,8 @@ const userController = {
   },
 
   getProfile: async (req, res) => {
-    const { id } = req.session.user || {};
-
     try {
+      const { id } = req.session.user || {};
       const user = await User.findByPk(id, {
         attributes: {
           exclude: [
@@ -119,19 +136,8 @@ const userController = {
   },
 
   updateSummary: async (req, res) => {
-    const { id } = req.session.user || {};
     try {
-      const user = await User.findByPk(id, {
-        attributes: {
-          exclude: [
-            "password",
-            "activation_token",
-            "is_activated",
-            "createdAt",
-            "updatedAt",
-          ],
-        },
-      });
+      const user = await userController.getSessionUser(req);
       if (!user) {
         return res
           .status(401)
@@ -194,9 +200,8 @@ const userController = {
   },
 
   getSummary: async (req, res) => {
-    const { id } = req.session.user || {};
-
     try {
+      const { id } = req.session.user || {};
       const user = await User.findByPk(id, {
         attributes: {
           exclude: [
@@ -238,19 +243,8 @@ const userController = {
   },
 
   createSkill: async (req, res) => {
-    const { id } = req.session.user || {};
     try {
-      const user = await User.findByPk(id, {
-        attributes: {
-          exclude: [
-            "password",
-            "activation_token",
-            "is_activated",
-            "createdAt",
-            "updatedAt",
-          ],
-        },
-      });
+      const user = await userController.getSessionUser(req);
       if (!user) {
         return res
           .status(401)
@@ -290,20 +284,8 @@ const userController = {
   },
 
   getSkills: async (req, res) => {
-    const { id } = req.session.user || {};
-
     try {
-      const user = await User.findByPk(id, {
-        attributes: {
-          exclude: [
-            "password",
-            "activation_token",
-            "is_activated",
-            "createdAt",
-            "updatedAt",
-          ],
-        },
-      });
+      const user = await userController.getSessionUser(req);
       if (!user) {
         return res
           .status(401)
@@ -328,11 +310,9 @@ const userController = {
     }
   },
 
-  getIndividualSkill: async (req, res) => {
-    const { id } = req.params;
-    // const { id } = req.session.user || {};
-
+  getOneSkill: async (req, res) => {
     try {
+      const { id } = req.params;
       const skill = await Skill.findByPk(id, {
         attributes: ["id", "skill_name"],
       });
@@ -356,10 +336,8 @@ const userController = {
   },
 
   updateSkill: async (req, res) => {
-    const { id } = req.params;
-    // const { id } = req.session.user || {};
-
     try {
+      const { id } = req.params;
       const skill = await Skill.findByPk(id, {
         attributes: ["id", "skill_name"],
       });
@@ -392,6 +370,133 @@ const userController = {
       return res
         .status(500)
         .json(jsonMessages(500, "no", "Unable to update skill", []));
+    }
+  },
+
+  createShowcase: async (req, res) => {
+    try {
+      const user = await userController.getSessionUser(req);
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      req.body.identifier = "Default Showcase";
+      req.body.is_main = true;
+      req.body.tags = ["default"];
+
+      console.log(req.body);
+
+      const newShowcase = await user.createShowcase(req.body);
+      const { createdAt, updatedAt, is_main, user_id, ...finalResult } =
+        newShowcase.toJSON();
+
+      return res
+        .status(201)
+        .json(jsonMessages(201, "yes", "Showcase created", [finalResult]));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to create showcase", []));
+    }
+  },
+
+  getShowcases: async (req, res) => {
+    try {
+      const user = await userController.getSessionUser(req);
+      if (!user) {
+        return res
+          .status(401)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      let showcases = await user.getShowcases({
+        where: { is_main: true },
+        attributes: ["id", "url", "description"],
+        raw: true,
+      });
+
+      const data = [showcases];
+      return res
+        .status(200)
+        .json(jsonMessages(200, "yes", "Get showcases successfully", data));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to get showcases", []));
+    }
+  },
+
+  getOneShowcase: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const showcase = await Showcase.findByPk(id, {
+        attributes: ["id", "url", "description"],
+      });
+
+      if (!showcase) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "showcase not found", []));
+      }
+
+      const data = [showcase.toJSON()];
+      return res
+        .status(200)
+        .json(jsonMessages(200, "yes", "Get showcase successfully", data));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to get showcase", []));
+    }
+  },
+
+  updateShowcase: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const showcase = await Showcase.findByPk(id, {
+        attributes: ["id", "url", "description"],
+      });
+
+      if (!showcase) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "showcase not found", []));
+      }
+
+      showcase.set(req.body);
+      await showcase
+        .save()
+        .then((updatedShowcase) => {
+          const data = [updatedShowcase.toJSON()];
+          return res
+            .status(200)
+            .json(
+              jsonMessages(200, "yes", "Update showcase successfully", data)
+            );
+        })
+        .catch((error) => {
+          console.log(error);
+          return res
+            .status(400)
+            .json(
+              jsonMessages(
+                400,
+                "no",
+                "Unable to update showcase successfully",
+                []
+              )
+            );
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to update showcase", []));
     }
   },
 };

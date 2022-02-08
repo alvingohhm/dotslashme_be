@@ -40,6 +40,10 @@ module.exports = {
         type: Sequelize.ARRAY(Sequelize.STRING),
         allowNull: true,
       },
+      is_main: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false,
+      },
       summary_id: {
         type: Sequelize.UUID,
         onDelete: "SET NULL",
@@ -47,7 +51,7 @@ module.exports = {
           model: "Summaries",
           key: "id",
         },
-        allowNull: false,
+        allowNull: true,
       },
       createdAt: {
         allowNull: false,

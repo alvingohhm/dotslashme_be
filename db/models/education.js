@@ -11,7 +11,25 @@ module.exports = (db, DataTypes) => {
       // define association here
 
       //1 to many between user and education
-      Education.belongsTo(models.User);
+      Education.belongsTo(models.User, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
+
+      //many to many between resume and education through ResumeEducation
+      Education.belongsToMany(models.Resume, {
+        through: models.ResumeEducation,
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "education_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
     }
   }
   Education.init(
@@ -25,11 +43,6 @@ module.exports = (db, DataTypes) => {
       identifier: {
         type: DataTypes.STRING,
         allowNull: false,
-        set(value) {
-          if (!value || value.length === 0) {
-            this.setDataValue("identifier", `Education_${this.id}`);
-          }
-        },
       },
       start_date: {
         type: DataTypes.DATEONLY,
@@ -60,6 +73,10 @@ module.exports = (db, DataTypes) => {
       tags: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
+      },
+      is_main: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

@@ -11,7 +11,25 @@ module.exports = (db, DataTypes) => {
       // define association here
 
       //1 to many between user and experience
-      Experience.belongsTo(models.User);
+      Experience.belongsTo(models.User, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
+
+      //many to many between resume and experience through ResumeSkills
+      Experience.belongsToMany(models.Resume, {
+        through: models.ResumeExperiences,
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "experience_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
     }
   }
   Experience.init(
@@ -60,6 +78,10 @@ module.exports = (db, DataTypes) => {
       tags: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
+      },
+      is_main: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

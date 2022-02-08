@@ -26,7 +26,7 @@ module.exports = (db, DataTypes) => {
         foreignKey: {
           name: "summary_id",
           type: DataTypes.UUID,
-          allowNull: false,
+          allowNull: true,
         },
       });
     }

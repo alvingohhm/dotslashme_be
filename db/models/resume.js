@@ -11,10 +11,24 @@ module.exports = (db, DataTypes) => {
       // define association here
 
       //1 to many between user and resume
-      Resume.belongsTo(models.User);
+      Resume.belongsTo(models.User, {
+        onDelete: "CASCADE",
+        foreignKey: {
+          name: "user_id",
+          type: DataTypes.UUID,
+          allowNull: false,
+        },
+      });
 
       //1 to many between summary and resuem
-      Resume.belongsTo(models.Summary);
+      Resume.belongsTo(models.Summary, {
+        onDelete: "SET NULL",
+        foreignKey: {
+          name: "summary_id",
+          type: DataTypes.UUID,
+          allowNull: true,
+        },
+      });
 
       //many to many between resume and showcase through ResumeShowcases
       Resume.belongsToMany(models.Showcase, {
@@ -43,7 +57,7 @@ module.exports = (db, DataTypes) => {
         through: models.ResumeExperiences,
         onDelete: "CASCADE",
         foreignKey: {
-          name: "experience_id",
+          name: "resume_id",
           type: DataTypes.UUID,
           allowNull: false,
         },
@@ -54,7 +68,7 @@ module.exports = (db, DataTypes) => {
         through: models.ResumeEducation,
         onDelete: "CASCADE",
         foreignKey: {
-          name: "education_id",
+          name: "resume_id",
           type: DataTypes.UUID,
           allowNull: false,
         },
@@ -97,6 +111,10 @@ module.exports = (db, DataTypes) => {
       job_tags: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         allowNull: true,
+      },
+      is_main: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
       },
     },
     {

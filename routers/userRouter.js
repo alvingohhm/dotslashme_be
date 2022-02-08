@@ -12,6 +12,7 @@ router.post("/skill", userController.createSkill);
 router.get("/skills", userController.getSkills);
 router.get("/skill/:id", userController.getOneSkill);
 router.put("/skill/:id", userController.updateSkill);
+router.delete("/skill/:id", userController.removeSkill);
 
 router.post("/showcase", userController.createShowcase);
 router.get("/showcases", userController.getShowcases);

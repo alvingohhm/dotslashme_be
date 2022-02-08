@@ -407,6 +407,39 @@ const userController = {
     }
   },
 
+  removeSkill: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const skill = await Skill.findByPk(id);
+
+      if (!skill) {
+        return res
+          .status(400)
+          .json(jsonMessages(400, "no", "skill not found", []));
+      }
+
+      skill
+        .destroy()
+        .then((data) => {
+          console.log(data);
+          return res
+            .status(200)
+            .json(jsonMessages(200, "yes", "Skill remove successfully", []));
+        })
+        .catch((err) => {
+          console.log(err);
+          return res
+            .status(400)
+            .json(jsonMessages(400, "no", "Unable to remove skill", []));
+        });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .json(jsonMessages(500, "no", "Unable to update skill", []));
+    }
+  },
+
   createShowcase: async (req, res) => {
     try {
       const user = await userController.getSessionUser(req);

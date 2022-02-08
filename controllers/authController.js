@@ -26,7 +26,7 @@ const authController = {
         resolve(decoded);
       });
     }),
-
+  //signup create user and default resume for user
   signup_handler: async (req, res) => {
     const { email, password, first_name, last_name } = req.body;
 
@@ -47,6 +47,25 @@ const authController = {
       const user = await User.create(req.body);
 
       if (user) {
+        //create default resume when user signup
+        ResumeSetupData = {
+          identifier: "Default Resume",
+          has_phone: true,
+          has_address: false,
+          has_socialmedia: true,
+          tags: ["default"],
+          job_tabs: [],
+          is_main: true,
+        };
+
+        resume = await user.createResume(ResumeSetupData).catch((err) => {
+          return res
+            .status(400)
+            .json(
+              jsonMessages(400, "no", "Failed creating default resume", [])
+            );
+        });
+
         const accessToken = authController.genJwtToken(user.id, "access");
         const refreshToken = authController.genJwtToken(user.id, "refresh");
 

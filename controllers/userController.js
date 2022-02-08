@@ -151,6 +151,10 @@ const userController = {
           .status(401)
           .json(jsonMessages(401, "no", "User not found", []));
       }
+      //create default resume instance
+
+      const resumes = await user.getResumes({ where: { is_main: true } });
+      const resume = resumes[0];
 
       let summaries = await user.getSummaries({ where: { is_main: true } });
 
@@ -163,6 +167,19 @@ const userController = {
         if (summaries.length === 0) {
           // create summary if there isn't a record
           newSummary = await user.createSummary(req.body);
+
+          await resume.setSummary(newSummary).catch((err) => {
+            return res
+              .status(400)
+              .json(
+                jsonMessages(
+                  400,
+                  "no",
+                  "unable to link associate resume with summary"
+                ),
+                []
+              );
+          });
 
           const { id, createdAt, updatedAt, is_main, user_id, ...finalResult } =
             newSummary.toJSON();
@@ -227,6 +244,8 @@ const userController = {
       let data;
       if (summaries.length === 1) {
         data = summaries;
+      } else if (summaries.length === 0) {
+        data = [];
       } else {
         data = [summaries[0]];
       }

@@ -1,3 +1,4 @@
+const { merge } = require("lodash");
 const {
   User,
   Profile,
@@ -5,6 +6,7 @@ const {
   Showcase,
   Education,
   Experience,
+  Resume,
 } = require("../db/models");
 const jsonMessages = require("../utils/jsonMessages");
 
@@ -31,7 +33,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -44,42 +46,44 @@ const userController = {
       await user.save().catch((error) => {
         console.log(error);
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Unable to update profile", []));
       });
 
       //update profile section
+      const { first_name, last_name, ...amendedProfile } = req.body;
       let profile = await user.getProfile();
 
       if (!profile) {
         //if no profile exist create it instead of update
-        profile = await user.createProfile(req.body.Profile);
+        profile = await user.createProfile(amendedProfile);
 
-        const finalResult = {
+        const userResult = {
           first_name: user.first_name,
           last_name: user.last_name,
         };
 
         const { id, createdAt, updatedAt, user_id, ...updatedProfile } =
           profile.toJSON();
-        finalResult.Profile = updatedProfile;
+
+        const finalResult = merge(userResult, updatedProfile);
 
         return res
           .status(201)
           .json(jsonMessages(201, "yes", "Profile created", [finalResult]));
       } else {
-        //i fprofile exist update instead
-        profile.set(req.body.Profile);
+        //if profile exist update instead
+        profile.set(amendedProfile);
         await profile
           .save()
           .then((data) => {
-            const finalResult = {
+            const userResult = {
               first_name: user.first_name,
               last_name: user.last_name,
             };
             const { id, createdAt, updatedAt, user_id, ...updatedProfile } =
               data.toJSON();
-            finalResult.Profile = updatedProfile;
+            const finalResult = merge(userResult, updatedProfile);
 
             return res
               .status(201)
@@ -88,56 +92,49 @@ const userController = {
           .catch((error) => {
             console.log(error);
             return res
-              .status(400)
+              .status(200)
               .json(jsonMessages(400, "no", "Unable to update profile", []));
           });
       }
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to create profile", []));
     }
   },
 
   getProfile: async (req, res) => {
     try {
-      const { id } = req.session.user || {};
-      const user = await User.findByPk(id, {
-        attributes: {
-          exclude: [
-            "password",
-            "activation_token",
-            "is_activated",
-            "createdAt",
-            "updatedAt",
-          ],
-        },
-        include: [
-          {
-            model: Profile,
-            attributes: {
-              exclude: ["createdAt", "updatedAt", "user_id"],
-            },
-          },
-        ],
-      });
-
+      const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
-      const data = [user.toJSON()];
+      let profile = await user.getProfile({
+        attributes: {
+          exclude: ["createdAt", "updatedAt", "user_id", "id"],
+        },
+      });
+      if (!profile) {
+        return res
+          .status(200)
+          .json(jsonMessages(401, "no", "User cannot get profile", []));
+      }
+
+      const finalProfile = merge(user.toJSON(), profile.toJSON());
 
       return res
         .status(200)
-        .json(jsonMessages(200, "yes", "Get profile successfully", data));
+        .json(
+          jsonMessages(200, "yes", "Get profile successfully", [finalProfile])
+        );
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get profile", []));
     }
   },
@@ -147,7 +144,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
       //create default resume instance
@@ -169,7 +166,7 @@ const userController = {
 
           await resume.setSummary(newSummary).catch((err) => {
             return res
-              .status(400)
+              .status(200)
               .json(
                 jsonMessages(
                   400,
@@ -210,7 +207,7 @@ const userController = {
             .catch((error) => {
               console.log(error);
               return res
-                .status(400)
+                .status(200)
                 .json(jsonMessages(400, "no", "Unable to update profile", []));
             });
         }
@@ -218,7 +215,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to create summary", []));
     }
   },
@@ -228,7 +225,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -255,7 +252,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get summary", []));
     }
   },
@@ -265,7 +262,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -283,7 +280,7 @@ const userController = {
 
       if (skillNames.includes(req.body.skill_name)) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Skill already exist", []));
       }
 
@@ -298,7 +295,7 @@ const userController = {
       await resume.addSkill(newSkill).catch((err) => {
         console.log(err);
         return res
-          .status(400)
+          .status(200)
           .json(
             jsonMessages(400, "no", "unable to associate resume with skill"),
             []
@@ -311,7 +308,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to create skill", []));
     }
   },
@@ -321,7 +318,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -338,7 +335,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get skills", []));
     }
   },
@@ -352,7 +349,7 @@ const userController = {
 
       if (!skill) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "skill not found", []));
       }
 
@@ -363,7 +360,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get skill", []));
     }
   },
@@ -377,7 +374,7 @@ const userController = {
 
       if (!skill) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "skill not found", []));
       }
 
@@ -393,7 +390,7 @@ const userController = {
         .catch((error) => {
           console.log(error);
           return res
-            .status(400)
+            .status(200)
             .json(
               jsonMessages(400, "no", "Unable to update skill successfully", [])
             );
@@ -401,7 +398,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to update skill", []));
     }
   },
@@ -413,7 +410,7 @@ const userController = {
 
       if (!skill) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "skill not found", []));
       }
 
@@ -427,13 +424,13 @@ const userController = {
         .catch((err) => {
           console.log(err);
           return res
-            .status(400)
+            .status(200)
             .json(jsonMessages(400, "no", "Unable to remove skill", []));
         });
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to remove skill", []));
     }
   },
@@ -443,7 +440,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -463,7 +460,7 @@ const userController = {
       await resume.addShowcase(newShowcase).catch((err) => {
         console.log(err);
         return res
-          .status(400)
+          .status(200)
           .json(
             jsonMessages(400, "no", "unable to associate showcase with skill"),
             []
@@ -476,7 +473,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to create showcase", []));
     }
   },
@@ -486,7 +483,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -503,7 +500,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get showcases", []));
     }
   },
@@ -517,7 +514,7 @@ const userController = {
 
       if (!showcase) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "showcase not found", []));
       }
 
@@ -528,7 +525,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get showcase", []));
     }
   },
@@ -542,7 +539,7 @@ const userController = {
 
       if (!showcase) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "showcase not found", []));
       }
 
@@ -560,7 +557,7 @@ const userController = {
         .catch((error) => {
           console.log(error);
           return res
-            .status(400)
+            .status(200)
             .json(
               jsonMessages(
                 400,
@@ -573,7 +570,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to update showcase", []));
     }
   },
@@ -587,7 +584,7 @@ const userController = {
 
       if (!showcase) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "showcase not found", []));
       }
 
@@ -601,13 +598,13 @@ const userController = {
         .catch((err) => {
           console.log(err);
           return res
-            .status(400)
+            .status(200)
             .json(jsonMessages(400, "no", "Unable to remove showcase", []));
         });
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to remove showcase", []));
     }
   },
@@ -617,7 +614,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -637,7 +634,7 @@ const userController = {
       await resume.addEducation(newEducation).catch((err) => {
         console.log(err);
         return res
-          .status(400)
+          .status(200)
           .json(
             jsonMessages(
               400,
@@ -657,9 +654,7 @@ const userController = {
       console.log(err);
       return res
         .status(500)
-        .json(
-          jsonMessages(500, "no", "Unable to create education details", [])
-        );
+        .json(jsonMessages(20, "no", "Unable to create education details", []));
     }
   },
 
@@ -668,7 +663,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -695,7 +690,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(
             500,
@@ -718,7 +713,7 @@ const userController = {
 
       if (!education) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Education details not found", []));
       }
 
@@ -731,7 +726,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get education details", []));
     }
   },
@@ -747,7 +742,7 @@ const userController = {
 
       if (!education) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Education details not found", []));
       }
 
@@ -770,7 +765,7 @@ const userController = {
         .catch((error) => {
           console.log(error);
           return res
-            .status(400)
+            .status(200)
             .json(
               jsonMessages(
                 400,
@@ -783,7 +778,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(500, "no", "Unable to update education details", [])
         );
@@ -801,7 +796,7 @@ const userController = {
 
       if (!education) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Education details not found", []));
       }
 
@@ -822,7 +817,7 @@ const userController = {
         .catch((err) => {
           console.log(err);
           return res
-            .status(400)
+            .status(200)
             .json(
               jsonMessages(400, "no", "Unable to remove education details", [])
             );
@@ -830,7 +825,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(500, "no", "Unable to remove education details", [])
         );
@@ -842,7 +837,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -862,7 +857,7 @@ const userController = {
       await resume.addExperience(newExperience).catch((err) => {
         console.log(err);
         return res
-          .status(400)
+          .status(200)
           .json(
             jsonMessages(
               400,
@@ -881,7 +876,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(500, "no", "Unable to create Experience details", [])
         );
@@ -893,7 +888,7 @@ const userController = {
       const user = await userController.getSessionUser(req);
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -920,7 +915,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(
             500,
@@ -943,7 +938,7 @@ const userController = {
 
       if (!experience) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Experience details not found", []));
       }
 
@@ -956,7 +951,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to get experience details", []));
     }
   },
@@ -972,7 +967,7 @@ const userController = {
 
       if (!experience) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Experience details not found", []));
       }
 
@@ -995,7 +990,7 @@ const userController = {
         .catch((error) => {
           console.log(error);
           return res
-            .status(400)
+            .status(200)
             .json(
               jsonMessages(
                 400,
@@ -1008,7 +1003,7 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(500, "no", "Unable to update experience details", [])
         );
@@ -1026,7 +1021,7 @@ const userController = {
 
       if (!experience) {
         return res
-          .status(400)
+          .status(200)
           .json(jsonMessages(400, "no", "Experience details not found", []));
       }
 
@@ -1047,7 +1042,7 @@ const userController = {
         .catch((err) => {
           console.log(err);
           return res
-            .status(400)
+            .status(200)
             .json(
               jsonMessages(400, "no", "Unable to remove Experience details", [])
             );
@@ -1055,10 +1050,86 @@ const userController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(500, "no", "Unable to remove experience details", [])
         );
+    }
+  },
+
+  getResume: async (req, res) => {
+    try {
+      const resumeFinal = {};
+      const user = await userController.getSessionUser(req);
+      if (!user) {
+        return res
+          .status(200)
+          .json(jsonMessages(401, "no", "User not found", []));
+      }
+
+      const resumes = await user.getResumes({ where: { is_main: true } });
+      const resume = resumes[0];
+
+      resumeFinal.user = user.toJSON();
+      delete resumeFinal.user["id"];
+
+      //get profile for resume;
+      const profile = await user.getProfile({
+        attributes: {
+          exclude: ["id", "user_id", "createdAt", "updatedAt"],
+        },
+      });
+      resumeFinal.profile = profile.toJSON();
+
+      const summary = await resume.getSummary({
+        attributes: {
+          exclude: ["id", "user_id", "createdAt", "updatedAt"],
+        },
+      });
+      resumeFinal.summary = summary.toJSON();
+
+      const skills = await resume.getSkills({
+        attributes: {
+          exclude: ["id", "user_id", "createdAt", "updatedAt"],
+        },
+        raw: true,
+      });
+      resumeFinal.skills = skills;
+
+      const showcases = await resume.getShowcases({
+        attributes: {
+          exclude: ["id", "user_id", "createdAt", "updatedAt"],
+        },
+        raw: true,
+      });
+      resumeFinal.showcases = showcases;
+
+      const education = await resume.getEducation({
+        attributes: {
+          exclude: ["id", "user_id", "createdAt", "updatedAt"],
+        },
+        raw: true,
+      });
+
+      resumeFinal.education = education;
+
+      const experiences = await resume.getExperiences({
+        attributes: {
+          exclude: ["id", "user_id", "createdAt", "updatedAt"],
+        },
+        raw: true,
+      });
+
+      resumeFinal.experiences = experiences;
+
+      return res
+        .status(201)
+        .json(jsonMessages(201, "yes", "Resume created", [resumeFinal]));
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(200)
+        .json(jsonMessages(500, "no", "Unable to get resume", []));
     }
   },
 };

@@ -32,7 +32,7 @@ const authController = {
 
     if (!email || !password || !first_name || !last_name) {
       return res
-        .status(400)
+        .status(200)
         .json(
           jsonMessages(
             400,
@@ -60,7 +60,7 @@ const authController = {
 
         resume = await user.createResume(ResumeSetupData).catch((err) => {
           return res
-            .status(400)
+            .status(200)
             .json(
               jsonMessages(400, "no", "Failed creating default resume", [])
             );
@@ -92,7 +92,7 @@ const authController = {
           ? "Failed to register, invalid data!"
           : message;
 
-      return res.status(500).json(jsonMessages(500, "no", msg, []));
+      return res.status(200).json(jsonMessages(500, "no", msg, []));
     }
   },
 
@@ -101,7 +101,7 @@ const authController = {
 
     if (!email || !password) {
       return res
-        .status(400)
+        .status(200)
         .json(
           jsonMessages(
             400,
@@ -135,13 +135,13 @@ const authController = {
         );
       } else {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "Invalid email or password", []));
       }
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(
           jsonMessages(500, "no", "Unable to log in due to internal error", [])
         );
@@ -159,7 +159,7 @@ const authController = {
 
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -180,7 +180,7 @@ const authController = {
     } catch (err) {
       console.log(err);
       return res
-        .status(500)
+        .status(200)
         .json(jsonMessages(500, "no", "Unable to generate token", []));
     }
   },
@@ -190,7 +190,7 @@ const authController = {
       if (err) {
         console.log(err);
         return res
-          .status(500)
+          .status(200)
           .json(jsonMessages(500, "no", "Logout operation error", []));
       } else {
         return res
@@ -206,17 +206,17 @@ const authController = {
 
     if (!authorization.startsWith("Bearer")) {
       return res
-        .status(401)
+        .status(200)
         .json(jsonMessages(401, "no", "Not authorized. Missing token", []));
     }
 
     token = authorization.split(" ")[1].trim();
 
-    if (token !== accessToken) {
-      return res
-        .status(401)
-        .json(jsonMessages(401, "no", "AccessToken not valid", []));
-    }
+    // if (token !== accessToken) {
+    //   return res
+    //     .status(200)
+    //     .json(jsonMessages(401, "no", "AccessToken not valid", []));
+    // }
 
     try {
       const decoded = await authController.verifyToken(token, "access");
@@ -226,7 +226,7 @@ const authController = {
 
       if (!user) {
         return res
-          .status(401)
+          .status(200)
           .json(jsonMessages(401, "no", "User not found", []));
       }
 
@@ -234,7 +234,7 @@ const authController = {
       next();
     } catch (err) {
       console.log(err);
-      return res.status(401).json(jsonMessages(401, "no", err.message, []));
+      return res.status(200).json(jsonMessages(401, "no", err.message, []));
     }
   },
 };
